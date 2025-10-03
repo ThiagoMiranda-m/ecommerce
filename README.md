@@ -261,3 +261,17 @@ O projeto segue uma arquitetura em camadas para garantir a separação de respon
         * `├── JwtService.java` (Lógica para criar e validar tokens JWT)
         * `├── ProductService.java` (Lógica de negócio para o CRUD de produtos)
         * `└── UserDetailsServiceImpl.java` (Serviço para o Spring Security carregar os usuários)
+
+---
+
+## 👨‍💻 Autor
+
+Desenvolvido por **Thiago André Neves Miranda**.
+
+-   [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/tanm-dev/)
+-   [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/[SEU-USUARIO-GITHUB])
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT.
+     
