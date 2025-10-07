@@ -31,9 +31,9 @@
 
 ## 🎯 Sobre o Projeto
 
-A **E-commerce API** é a espinha dorsal de uma loja virtual moderna. Este projeto implementa toda a lógica de negócio necessária para gerenciar produtos, clientes, e o fluxo de autenticação. A arquitetura foi pensada para ser segura, escalável e capaz de traduzir requisitos complexos do mundo real em código funcional e de alta qualidade.
+A **E-commerce API** é a espinha dorsal de uma loja virtual moderna. Este projeto implementa toda a lógica de negócio necessária para gerenciar produtos, clientes, carrinho de compras e o fluxo de pedidos. A arquitetura foi pensada para ser segura, escalável e capaz de traduzir requisitos complexos do mundo real em código funcional e de alta qualidade.
 
-O objetivo principal foi criar um sistema que não apenas funcionasse, mas que fosse construído sobre uma base sólida de boas práticas de desenvolvimento, segurança e modelagem de dados relacional.
+O objetivo foi criar um sistema que não apenas funcionasse, mas que fosse construído sobre uma base sólida de boas práticas de desenvolvimento, segurança e modelagem de dados relacional.
 
 ---
 
@@ -41,18 +41,27 @@ O objetivo principal foi criar um sistema que não apenas funcionasse, mas que f
 
 -   🔐 **Sistema de Autenticação Completo**:
     -   Registro de clientes e administradores com perfis distintos.
-    -   Autenticação segura via **JWT (JSON Web Token)**, garantindo que apenas usuários logados possam acessar rotas protegidas.
-    -   Senhas criptografadas com Bcrypt para armazenamento seguro.
+    -   Autenticação segura via **JWT (JSON Web Token)**.
+    -   Senhas criptografadas com Bcrypt.
 
 -   📦 **Gerenciamento de Produtos (Catálogo)**:
     -   CRUD completo para produtos, acessível apenas para administradores (`ADMIN`).
-    -   Endpoints públicos para listagem e busca de produtos, permitindo que qualquer visitante visualize o catálogo.
+    -   Endpoints públicos para listagem e busca de produtos.
+
+-   🛒 **Funcionalidade de Carrinho de Compras**:
+    -   Adicionar produtos ao carrinho.
+    -   Se o produto já existe no carrinho, a quantidade é incrementada.
+    -   O carrinho é persistente e vinculado ao usuário logado.
+
+-   🛍️ **Fluxo de Pedidos (Checkout)**:
+    -   Criação de um novo pedido a partir dos itens do carrinho.
+    -   **Atualização de estoque** em tempo real após a finalização da compra.
+    -   O carrinho é esvaziado após o checkout.
+    -   Acesso ao histórico de pedidos por usuário.
 
 -   🛡️ **Controle de Acesso Baseado em Papéis (Roles)**:
-    -   **Clientes (`USER`)**: Podem gerenciar seus dados e, futuramente, carrinhos e pedidos.
+    -   **Clientes (`USER`)**: Podem gerenciar seus dados, carrinho e pedidos.
     -   **Administradores (`ADMIN`)**: Têm acesso total ao gerenciamento de produtos.
-
--   ✔️ **Validação de Dados**: Utiliza o `jakarta.validation` para garantir que os dados recebidos pela API (ex: no registro de um usuário) sejam válidos e completos.
 
 ---
 
@@ -81,13 +90,11 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas em s
 -   [**Apache Maven**](https://maven.apache.org/download.cgi) 3.5 ou superior.
 -   [**MySQL Server**](https://dev.mysql.com/downloads/mysql/) instalado e em execução.
 -   Uma IDE de sua preferência (ex: **IntelliJ IDEA**, **VS Code**).
--   Um cliente de API, como o **[Postman](https://www.postman.com/downloads/)** ou **[DBeaver](https://dbeaver.io/)** para testar os endpoints e visualizar o banco.
+-   Um cliente de API, como o **[Postman](https://www.postman.com/downloads/)** ou **[DBeaver](https://dbeaver.io/)**.
 
 ---
 
 ## 🚀 Como Executar
-
-Siga os passos abaixo para executar o projeto localmente.
 
 1.  **Clone o repositório:**
     ```bash
@@ -103,7 +110,7 @@ Siga os passos abaixo para executar o projeto localmente.
     spring.datasource.username=seu_usuario_mysql
     spring.datasource.password=sua_senha_mysql
     ```
-    - A propriedade `createDatabaseIfNotExist=true` irá criar o banco de dados `ecommerce_db` para você na primeira execução, caso ele não exista.
+    - A propriedade `createDatabaseIfNotExist=true` irá criar o banco de dados `ecommerce_db` para você na primeira execução.
 
 3.  **Execute a aplicação:**
     ```bash
@@ -123,89 +130,48 @@ A seguir estão detalhados os endpoints disponíveis na API.
 <details>
 <summary><strong>🔑 Autenticação de Usuários</strong></summary>
 
-#### 1. Registrar um Novo Usuário
--   **Método**: `POST`
--   **Endpoint**: `/auth/register`
--   **Descrição**: Cria um novo usuário (`USER` ou `ADMIN`).
--   **Corpo da Requisição (`JSON`):**
-    ```json
-    {
-      "name": "Nome do Usuário",
-      "email": "usuario@email.com",
-      "password": "senha_forte",
-      "role": "USER"
-    }
-    ```
--   **Resposta de Sucesso (200 OK):** Retorna o token JWT para o usuário recém-criado.
-    ```json
-    {
-      "token": "eyJhbGciOiJIUzI1NiJ9..."
-    }
-    ```
-
-#### 2. Autenticar um Usuário (Login)
--   **Método**: `POST`
--   **Endpoint**: `/auth/login`
--   **Descrição**: Autentica um usuário e retorna um token JWT.
--   **Corpo da Requisição (`JSON`):**
-    ```json
-    {
-      "email": "usuario@email.com",
-      "password": "senha_forte"
-    }
-    ```
--   **Resposta de Sucesso (200 OK):**
-    ```json
-    {
-      "token": "eyJhbGciOiJIUzI1NiJ9..."
-    }
-    ```
+| Método | Endpoint             | Descrição                 | Acesso      |
+|--------|----------------------|---------------------------|-------------|
+| `POST` | `/auth/register`     | Registra um novo usuário. | Público     |
+| `POST` | `/auth/login`        | Autentica um usuário e retorna um token JWT. | Público     |
 </details>
 
 <details>
 <summary><strong>📦 Gerenciamento de Produtos</strong></summary>
 
-#### 3. Listar Todos os Produtos
--   **Método**: `GET`
--   **Endpoint**: `/products`
--   **Acesso**: Público.
--   **Resposta de Sucesso (200 OK):** Retorna uma lista com todos os produtos.
+| Método | Endpoint             | Descrição                 | Acesso      |
+|--------|----------------------|---------------------------|-------------|
+| `GET`  | `/products`          | Lista todos os produtos.  | Público     |
+| `GET`  | `/products/{id}`     | Busca um produto por ID.  | Público     |
+| `POST` | `/products`          | Cria um novo produto.     | `ADMIN`     |
+| `PUT`  | `/products/{id}`     | Atualiza um produto.      | `ADMIN`     |
+| `DELETE`| `/products/{id}`    | Deleta um produto.        | `ADMIN`     |
+</details>
 
-#### 4. Buscar um Produto por ID
--   **Método**: `GET`
--   **Endpoint**: `/products/{id}`
--   **Acesso**: Público.
--   **Resposta de Sucesso (200 OK):** Retorna o produto correspondente ao `id`.
+<details>
+<summary><strong>🛒 Carrinho de Compras</strong></summary>
 
-#### 5. Criar um Novo Produto
--   **Método**: `POST`
--   **Endpoint**: `/products`
--   **Acesso**: Requer autenticação de `ADMIN`.
--   **Header**: `Authorization: Bearer <seu_token_jwt>`
--   **Corpo da Requisição (`JSON`):**
+| Método | Endpoint             | Descrição                 | Acesso      |
+|--------|----------------------|---------------------------|-------------|
+| `POST` | `/cart/add`          | Adiciona um item ao carrinho do usuário logado. | `USER`      |
+- **Corpo da Requisição (`/cart/add`):**
     ```json
     {
-        "name": "Notebook Gamer",
-        "description": "Notebook com placa de vídeo dedicada.",
-        "price": 8999.90,
-        "stock": 25
+      "productId": 1,
+      "quantity": 2
     }
     ```
+- **Resposta de Sucesso:** Retorna o objeto do carrinho (`Cart`) atualizado.
+</details>
 
-#### 6. Atualizar um Produto
--   **Método**: `PUT`
--   **Endpoint**: `/products/{id}`
--   **Acesso**: Requer autenticação de `ADMIN`.
--   **Header**: `Authorization: Bearer <seu_token_jwt>`
--   **Corpo da Requisição (`JSON`):** Mesmo formato da criação.
+<details>
+<summary><strong>🛍️ Pedidos (Orders)</strong></summary>
 
-#### 7. Deletar um Produto
--   **Método**: `DELETE`
--   **Endpoint**: `/products/{id}`
--   **Acesso**: Requer autenticação de `ADMIN`.
--   **Header**: `Authorization: Bearer <seu_token_jwt>`
--   **Resposta de Sucesso (204 No Content):** Corpo da resposta vazio.
-
+| Método | Endpoint             | Descrição                 | Acesso      |
+|--------|----------------------|---------------------------|-------------|
+| `POST` | `/orders/checkout`   | Cria um pedido a partir do carrinho e o esvazia. | `USER`      |
+| `GET`  | `/orders`            | Lista o histórico de pedidos do usuário logado. | `USER`      |
+- **Resposta de Sucesso (`/orders/checkout`):** Retorna o objeto do pedido (`Order`) recém-criado.
 </details>
 
 ---
@@ -217,26 +183,57 @@ O Hibernate irá gerar o seguinte esquema de banco de dados com base nas entidad
 **Tabela `users`**
 | Coluna | Tipo | Restrições |
 |---|---|---|
-| `id` | `BIGINT` | Chave Primária, Auto-incremento |
-| `name` | `VARCHAR(255)` | |
+| `id` | `BIGINT` | Chave Primária |
 | `email` | `VARCHAR(255)` | Único, Não Nulo |
+| `name` | `VARCHAR(255)` | |
 | `password` | `VARCHAR(255)` | Não Nulo |
 | `role` | `VARCHAR(255)` | `USER` ou `ADMIN` |
 
 **Tabela `products`**
 | Coluna | Tipo | Restrições |
 |---|---|---|
-| `id` | `BIGINT` | Chave Primária, Auto-incremento |
+| `id` | `BIGINT` | Chave Primária |
 | `name` | `VARCHAR(255)` | Não Nulo |
 | `description` | `VARCHAR(255)` | |
 | `price` | `DECIMAL(19,2)` | Não Nulo |
 | `stock` | `INTEGER` | Não Nulo |
 
+**Tabela `carts`**
+| Coluna | Tipo | Restrições |
+|---|---|---|
+| `id` | `BIGINT` | Chave Primária |
+| `user_id` | `BIGINT` | Chave Estrangeira (users), Único, Não Nulo |
+
+**Tabela `cart_items`**
+| Coluna | Tipo | Restrições |
+|---|---|---|
+| `id` | `BIGINT` | Chave Primária |
+| `quantity` | `INTEGER` | |
+| `cart_id` | `BIGINT` | Chave Estrangeira (carts) |
+| `product_id` | `BIGINT` | Chave Estrangeira (products) |
+
+**Tabela `orders`**
+| Coluna | Tipo | Restrições |
+|---|---|---|
+| `id` | `BIGINT` | Chave Primária |
+| `order_date` | `DATETIME(6)` | |
+| `total_price` | `DECIMAL(19,2)` | |
+| `user_id` | `BIGINT` | Chave Estrangeira (users) |
+
+**Tabela `order_items`**
+| Coluna | Tipo | Restrições |
+|---|---|---|
+| `id` | `BIGINT` | Chave Primária |
+| `price` | `DECIMAL(19,2)` | |
+| `quantity` | `INTEGER` | |
+| `order_id` | `BIGINT` | Chave Estrangeira (orders) |
+| `product_id` | `BIGINT` | Chave Estrangeira (products) |
+
 ---
 
 ## 🏗️ Estrutura do Projeto
 
-O projeto segue uma arquitetura em camadas para garantir a separação de responsabilidades e a manutenibilidade do código:
+O projeto segue uma arquitetura em camadas para garantir a separação de responsabilidades:
 
 * **`com.example.ecommerce`**
     * `└── config`
@@ -245,22 +242,35 @@ O projeto segue uma arquitetura em camadas para garantir a separação de respon
     * `└── controller`
         * `├── AuthController.java` (Endpoints para registro e login)
         * `└── ProductController.java` (Endpoints para o CRUD de produtos)
+        * `└── OrderController.java` (Endpoints para os pedidos)
+        * `└── CartController.java` (Endpoints para a criação do carrinho
     * `└── dto`
         * `├── AuthRequest.java` (Dados para a requisição de login)
         * `├── AuthResponse.java` (Resposta com o token JWT)
         * `└── RegisterRequest.java` (Dados para a requisição de registro)
+        * `└── AddItemRequest.java`(Dados para a requisição de adicionar item)
     * `└── model`
         * `├── Product.java` (Entidade que representa a tabela `products`)
         * `├── Role.java` (Enum para os papéis de usuário: `USER`, `ADMIN`)
         * `└── User.java` (Entidade que representa a tabela `users`)
+        * `└── Cart.java` (Entidade que representa a tebela `cart`)
+        * `└── Order.java` (Entidade que representa a tebela `order`)
+        * `└── OrderItem.java` (Entidade que representa a tebela `orderItem`)
+        * `└── CartItem.java` (Entidade que representa a tebela `cartItem`)
     * `└── repository`
         * `├── ProductRepository.java` (Interface para acesso aos dados de produtos)
         * `└── UserRepository.java` (Interface para acesso aos dados de usuários)
+        * `└── CartRepository.java` (Interface para acesso aos dados do carrihno)
+        * `└── CartItemRepository.java` (Interface para acesso aos dados de para os itens do carrinho)
+        * `└── OrderRepository.java` (Interface para acesso aos dados de pedido)
+        * `└── OrderItemRepository.java` (Interface para acesso aos dados dos itens de pedido)
     * `└── service`
         * `├── AuthService.java` (Lógica de negócio para autenticação)
         * `├── JwtService.java` (Lógica para criar e validar tokens JWT)
         * `├── ProductService.java` (Lógica de negócio para o CRUD de produtos)
         * `└── UserDetailsServiceImpl.java` (Serviço para o Spring Security carregar os usuários)
+        * `└── CartService.java` (Lógica de negócio para o funcionamento do carrinho)
+        * `└── OrderService.java` (Lógica de negócio para o funcionamento dos pedidos)
 
 ---
 
