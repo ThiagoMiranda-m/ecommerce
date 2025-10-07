@@ -36,10 +36,16 @@ public class SecurityConfig {
                         // Endpoints públicos
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+
                         // Endpoints de ADMIN para gerenciar produtos
                         .requestMatchers(HttpMethod.POST, "/products").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/products/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/products/**").hasAuthority("ADMIN")
+
+                        //NOVAS REGRAS: Endpoints de USER para os carrinhos e pedidos
+                        .requestMatchers("/cart/**").hasAuthority("USER")
+                        .requestMatchers("/orders/**").hasAuthority("USER")
+
                         // Outras requisições precisam de autenticação
                         .anyRequest().authenticated()
                 )
