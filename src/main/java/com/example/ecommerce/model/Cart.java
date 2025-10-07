@@ -1,6 +1,7 @@
 package com.example.ecommerce.model;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -25,5 +26,6 @@ public class Cart {
     // Cascade.ALL: Carrinho deletado, todos os itens também.
     // orphanRemoval = true: Se item excluído da lista, deletará do banco também.
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<CartItem> items = new ArrayList<>();
 }

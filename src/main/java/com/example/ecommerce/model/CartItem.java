@@ -1,5 +1,6 @@
 package com.example.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +22,7 @@ public class CartItem {
     //Many-to-one: Muitos pra um, no caso itens-para-carrinho
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
+    @JsonBackReference
     private Cart cart;
 
     //Muitos itens podem se referir ao mesmo produto.
